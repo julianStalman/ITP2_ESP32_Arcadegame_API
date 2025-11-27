@@ -3,6 +3,7 @@ from app.api.routes import user
 from fastapi import FastAPI
 from app.models import user as models
 from app.database.session import engine
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -16,7 +17,15 @@ def read_root():
     return {"message": "Hello World"}
 
 from app.api.routes import user
-app.include_router(user.router, prefix="/iteratives", tags=["iteratives"])
+app.include_router(user.router, prefix="/users", tags=["users"])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   
+    allow_credentials=True,
+    allow_methods=["*"],   
+    allow_headers=["*"],   
+)
 
 
 

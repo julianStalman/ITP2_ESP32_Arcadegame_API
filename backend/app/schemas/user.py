@@ -23,3 +23,10 @@ class UserInDBBase(UserBase):
 
 class User(UserInDBBase):
     pass
+
+class UserBasic(BaseModel):
+    id: int
+    username: str
+
+    class Config:
+        orm_mode = True

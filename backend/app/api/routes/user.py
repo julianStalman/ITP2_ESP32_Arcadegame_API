@@ -7,8 +7,10 @@ from app.crud.user import (
     update_snake_high_score,
     update_pong_high_score,
     delete_user,
+    get_snake_leaderboard,
+    get_pong_leaderboard,
 )
-from app.schemas.user import UserCreate, User
+from app.schemas.user import UserCreate, User, UserBasic
 from app.api.deps import get_db
 
 router = APIRouter()
@@ -21,10 +23,11 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
-@router.get("/", response_model=list[User])
-def read_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    """Retrieve a list of users with pagination."""
-    return get_users(db, skip=skip, limit=limit)
+
+@router.get("/", response_model=list[UserBasic])
+def read_users(db: Session = Depends(get_db)):
+    """Retrieve all users with only their ID and username."""
+    return get_users(db)
 
 @router.post("/", response_model=User)
 def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -58,3 +61,14 @@ def delete_existing_user(user_id: int, db: Session = Depends(get_db)):
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     return delete_user(db, user_id)
+
+
+@router.get("/leaderboard/snake", response_model=list[User])
+def read_snake_leaderboard(limit: int = 10, db: Session = Depends(get_db)):
+    """Retrieve the leaderboard for snake high scores."""
+    return get_snake_leaderboard(db, limit=limit)
+
+@router.get("/leaderboard/pong", response_model=list[User])
+def read_pong_leaderboard(limit: int = 10, db: Session = Depends(get_db)):
+    """Retrieve the leaderboard for pong high scores."""
+    return get_pong_leaderboard(db, limit=limit)
