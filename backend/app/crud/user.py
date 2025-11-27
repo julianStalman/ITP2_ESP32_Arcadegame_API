@@ -49,13 +49,13 @@ def update_pong_high_score(db: Session, user_id: int, new_pong_score: int):
         db.refresh(db_user)
     return db_user
 
-def get_snake_leaderboard(db: Session, limit: int = 10):
+def get_snake_leaderboard(db: Session):
     """Retrieve the leaderboard for snake high scores, sorted in descending order."""
-    return db.query(User).order_by(User.snake_high_score.desc()).limit(limit).all()
+    return db.query(User).order_by(User.snake_high_score.desc()).all()
 
-def get_pong_leaderboard(db: Session, limit: int = 10):
+def get_pong_leaderboard(db: Session):
     """Retrieve the leaderboard for pong high scores, sorted in descending order."""
-    return db.query(User).order_by(User.pong_high_score.desc()).limit(limit).all()
+    return db.query(User).order_by(User.pong_high_score.desc()).all()
 
 def delete_user(db: Session, user_id: int):
     db_user = db.query(User).filter(User.id == user_id).first()

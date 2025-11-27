@@ -64,11 +64,11 @@ def delete_existing_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/leaderboard/snake", response_model=list[User])
-def read_snake_leaderboard(limit: int = 10, db: Session = Depends(get_db)):
-    """Retrieve the leaderboard for snake high scores."""
-    return get_snake_leaderboard(db, limit=limit)
+def read_snake_leaderboard(db: Session = Depends(get_db)):
+    """Retrieve the leaderboard for snake high scores, sorted in descending order."""
+    return get_snake_leaderboard(db)
 
 @router.get("/leaderboard/pong", response_model=list[User])
-def read_pong_leaderboard(limit: int = 10, db: Session = Depends(get_db)):
-    """Retrieve the leaderboard for pong high scores."""
-    return get_pong_leaderboard(db, limit=limit)
+def read_pong_leaderboard(db: Session = Depends(get_db)):
+    """Retrieve the leaderboard for pong high scores, sorted in descending order."""
+    return get_pong_leaderboard(db)
