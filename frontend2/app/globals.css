@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -119,4 +121,121 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.font-arcade {
+  font-family: 'Press Start 2P', cursive;
+}
+
+/* ---------------------------------------------------------
+   NEON ARCADE BACKGROUND GRID
+--------------------------------------------------------- */
+.arcade-grid {
+  background: radial-gradient(circle at center, #000 0%, #020617 60%, #000 100%);
+  position: relative;
+}
+
+.arcade-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: 
+      linear-gradient(#0ff3 1px, transparent 1px),
+      linear-gradient(90deg, #0ff3 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   CRT SCANLINES + FLICKER
+--------------------------------------------------------- */
+.crt {
+  position: relative;
+}
+
+.crt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+  animation: flicker 0.18s infinite alternate;
+}
+
+@keyframes flicker {
+  from { opacity: 0.1; }
+  to { opacity: 0.25; }
+}
+
+/* ---------------------------------------------------------
+   ANIMATED NEON BORDER
+--------------------------------------------------------- */
+.neon-border {
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.neon-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(90deg, 
+      #ff00ff,
+      #00ffff,
+      #00ff00,
+      #ff00ff
+    ) 0 0 / 400% 100%;
+  animation: neon-move 6s linear infinite;
+  -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@keyframes neon-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 400% 0; }
+}
+
+/* ---------------------------------------------------------
+   RAINBOW COLOR CYCLE
+--------------------------------------------------------- */
+.rainbow-btn {
+  animation: colorPulse 3s linear infinite;
+}
+
+@keyframes colorPulse {
+  0%   { box-shadow: 0 0 12px #ff00ff; }
+  25%  { box-shadow: 0 0 12px #00ffff; }
+  50%  { box-shadow: 0 0 12px #00ff00; }
+  75%  { box-shadow: 0 0 12px #ff9900; }
+  100% { box-shadow: 0 0 12px #ff00ff; }
+}
+
+/* ---------------------------------------------------------
+   PULSE HOVER ROWS
+--------------------------------------------------------- */
+.row-hover:hover {
+  background-color: rgba(0, 255, 255, 0.1);
+  transform: scale(1.01);
+  transition: 0.15s ease;
+}
+
+/* ---------------------------------------------------------
+   ARCDE PIXEL FONT
+--------------------------------------------------------- */
+
+.font-arcade {
+  font-family: 'Press Start 2P', cursive;
 }
