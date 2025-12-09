@@ -15,10 +15,12 @@ def create_user(db: Session, user: UserCreate):
     # Check if the username already exists
     existing_user = db.query(User).filter(User.username == user.username).first()
     new_username = user.username
+    counter = 1
 
-    # If the username exists, append a '*' to the new username
+    # If the username exists, append a number to the new username
     while existing_user:
-        new_username += "*"
+        new_username = f"{user.username}{counter}"
+        counter += 1
         existing_user = db.query(User).filter(User.username == new_username).first()
 
     db_user = User(

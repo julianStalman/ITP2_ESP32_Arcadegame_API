@@ -4,8 +4,8 @@ import { useEffect, useState, useMemo } from 'react'
 import axios from 'axios'
 
 export default function Leaderboards() {
-  const [pongLeaderboard, setPongLeaderboard] = useState<any[]>([])
-  const [snakeLeaderboard, setSnakeLeaderboard] = useState<any[]>([])
+  const [pongLeaderboard, setPongLeaderboard] = useState<{ username: string; pong_high_score: number }[]>([])
+  const [snakeLeaderboard, setSnakeLeaderboard] = useState<{ username: string; snake_high_score: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -20,8 +20,8 @@ export default function Leaderboards() {
         axios.get('http://172.31.180.145:8000/users/leaderboard/pong'),
         axios.get('http://172.31.180.145:8000/users/leaderboard/snake'),
       ])
-      setPongLeaderboard(pongResponse.data)
-      setSnakeLeaderboard(snakeResponse.data)
+      setPongLeaderboard(pongResponse.data.sort((a: any, b: any) => b.pong_high_score - a.pong_high_score))
+      setSnakeLeaderboard(snakeResponse.data.sort((a: any, b: any) => b.snake_high_score - a.snake_high_score))
     } catch (err) {
       setError('Fehler beim Laden des Leaderboards.')
     } finally {
@@ -29,24 +29,54 @@ export default function Leaderboards() {
     }
   }
 
+  const refreshScores = async () => {
+    try {
+      const [pongResponse, snakeResponse] = await Promise.all([
+        axios.get('http://172.31.180.145:8000/users/leaderboard/pong'),
+        axios.get('http://172.31.180.145:8000/users/leaderboard/snake'),
+      ])
+
+      setPongLeaderboard((prev) =>
+        prev
+          .map((user) => {
+            const updated = pongResponse.data.find((u: any) => u.username === user.username)
+            return updated ? { ...user, pong_high_score: updated.pong_high_score } : user
+          })
+          .sort((a, b) => b.pong_high_score - a.pong_high_score)
+      )
+
+      setSnakeLeaderboard((prev) =>
+        prev
+          .map((user) => {
+            const updated = snakeResponse.data.find((u: any) => u.username === user.username)
+            return updated ? { ...user, snake_high_score: updated.snake_high_score } : user
+          })
+          .sort((a, b) => b.snake_high_score - a.snake_high_score)
+      )
+    } catch (err) {
+      console.error('Fehler beim Aktualisieren der Punkte', err)
+    }
+  }
+
   useEffect(() => {
     fetchLeaderboards()
+
+    const interval = setInterval(() => {
+      refreshScores()
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
-  // 🔹 Filtered leaderboards
-  const filteredSnake = useMemo(() => {
-    return snakeLeaderboard.filter((u) =>
-      u.username.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [searchTerm, snakeLeaderboard])
+  const filteredSnake = useMemo(
+    () => snakeLeaderboard.filter((u) => u.username.toLowerCase().includes(searchTerm.toLowerCase())),
+    [searchTerm, snakeLeaderboard]
+  )
+  const filteredPong = useMemo(
+    () => pongLeaderboard.filter((u) => u.username.toLowerCase().includes(searchTerm.toLowerCase())),
+    [searchTerm, pongLeaderboard]
+  )
 
-  const filteredPong = useMemo(() => {
-    return pongLeaderboard.filter((u) =>
-      u.username.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [searchTerm, pongLeaderboard])
-
-  // 🔹 Ranking maps
   const snakeRanks = useMemo(() => {
     const map: Record<string, number> = {}
     snakeLeaderboard.forEach((user, index) => (map[user.username] = index + 1))
@@ -62,25 +92,22 @@ export default function Leaderboards() {
   const getRankStyle = (rank: number) => {
     switch (rank) {
       case 1:
-        return "bg-blue-900/60 text-blue-300 font-bold"
+        return 'bg-blue-900/60 text-blue-300 font-bold'
       case 2:
-        return "bg-purple-900/60 text-purple-300 font-bold"
+        return 'bg-purple-900/60 text-purple-300 font-bold'
       case 3:
-        return "bg-pink-900/60 text-pink-300 font-bold"
+        return 'bg-pink-900/60 text-pink-300 font-bold'
       default:
-        return "hover:bg-blue-900/40 transition"
+        return 'hover:bg-blue-900/40 transition'
     }
   }
 
-  // 🔹 Create user + auto refresh
   const handleCreateUser = async () => {
     try {
       await axios.post('http://172.31.180.145:8000/users/', { username: newUsername })
       setIsModalOpen(false)
       setNewUsername('')
       alert('Benutzer erfolgreich erstellt!')
-
-      // 🔄 Refresh leaderboards automatically
       fetchLeaderboards()
     } catch (err) {
       alert('Fehler beim Erstellen des Benutzers.')
@@ -89,7 +116,6 @@ export default function Leaderboards() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-indigo-950 to-black text-neon font-arcade">
-
       {/* HEADER */}
       <header className="border-b border-blue-500/40 shadow-[0_0_15px_#00f] bg-black/60 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6">
@@ -100,8 +126,7 @@ export default function Leaderboards() {
 
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md 
-              shadow-[0_0_15px_#1e90ff] hover:shadow-[0_0_25px_#1e90ff] transition"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md shadow-[0_0_15px_#1e90ff] hover:shadow-[0_0_25px_#1e90ff] transition"
             >
               + Neuer Benutzer
             </button>
@@ -111,7 +136,6 @@ export default function Leaderboards() {
 
       {/* MAIN */}
       <main className="max-w-7xl mx-auto px-6 py-10">
-
         {/* SEARCH */}
         <div className="mb-8">
           <h3 className="font-medium text-blue-300 mb-2">🔍 Benutzername suchen</h3>
@@ -120,8 +144,7 @@ export default function Leaderboards() {
             placeholder="Benutzername..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:max-w-md px-4 py-2 border border-blue-500 bg-black text-blue-300 rounded-md 
-            shadow-[0_0_10px_#1e90ff] focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full md:max-w-md px-4 py-2 border border-blue-500 bg-black text-blue-300 rounded-md shadow-[0_0_10px_#1e90ff] focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
@@ -130,7 +153,6 @@ export default function Leaderboards() {
 
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-
             {/* SNAKE */}
             <section>
               <h2 className="text-xl font-bold text-green-400 mb-4 flex items-center gap-2">
@@ -190,7 +212,6 @@ export default function Leaderboards() {
                 </table>
               </div>
             </section>
-
           </div>
         )}
       </main>
@@ -206,8 +227,7 @@ export default function Leaderboards() {
               placeholder="Benutzername"
               value={newUsername}
               onChange={(e) => setNewUsername(e.target.value)}
-              className="w-full px-4 py-2 bg-black border border-blue-500 text-blue-300 rounded-md mb-4
-              focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-2 bg-black border border-blue-500 text-blue-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
             <div className="flex justify-end gap-4">
@@ -220,8 +240,7 @@ export default function Leaderboards() {
 
               <button
                 onClick={handleCreateUser}
-                className="px-4 py-2 bg-blue-600 text-white rounded 
-                shadow-[0_0_10px_#1e90ff] hover:shadow-[0_0_20px_#1e90ff]"
+                className="px-4 py-2 bg-blue-600 text-white rounded shadow-[0_0_10px_#1e90ff] hover:shadow-[0_0_20px_#1e90ff]"
               >
                 Erstellen
               </button>
@@ -229,7 +248,6 @@ export default function Leaderboards() {
           </div>
         </div>
       )}
-
     </div>
   )
 }
